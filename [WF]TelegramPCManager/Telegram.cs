@@ -147,34 +147,7 @@ namespace _WF_TelegramPCManager
                 //Уведомление что пользователь отправил сообщение боту
                 form.Invoke(new Action(() => OnMessage?.Invoke(messageData)));
 
-                bool HasPrivilages = Common.HasAccess(chatId);
-                
-                //Команду могут использовать все пользователи
-                if (messageText.Contains("/userid"))
-                {
-                    await commands.GetMyUserId(botClient, update, cancellationToken);
-                    return;
-                }
-
-                if (HasPrivilages) //Есть доступ к боту
-                {
-                    switch(messageText)
-                    {
-                        case "/shutdown":
-                            await commands.ShutDown(botClient, update, cancellationToken);
-                            break;
-                        case "/status":
-                            await commands.Status(botClient, update, cancellationToken);
-                            break;
-                        default:
-                            await commands.CommandMissing(botClient, update, cancellationToken);
-                            break;
-                    }
-                }
-                else // Нет доступа к боту
-                {
-                    await commands.PrivilagesMissing(botClient, update, cancellationToken);
-                }
+                await commands.ExecuteCommand(messageText, botClient, update, cancellationToken);
             }
             catch (Exception ex)
             {

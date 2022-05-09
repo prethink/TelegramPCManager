@@ -12,10 +12,58 @@ namespace _WF_TelegramPCManager
 {
     public class Commands
     {
+        delegate Task Command(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken);
+        Dictionary<Tuple<string,bool>, Command> _commands; 
         private Telegram telegram;
         public Commands(Telegram telegram)
         {
             this.telegram = telegram;
+            _commands = new Dictionary<Tuple<string, bool>, Command> ();
+            RegisterCommands();
+        }
+
+        /// <summary>
+        /// Регистрация всех доступных комманд
+        /// </summary>
+        public void RegisterCommands()
+        {
+            /*Формат регистрации Вызов команды, требуется права доступа, команда*/
+
+            _commands.Add(Tuple.Create("/userid", false), GetMyUserId);
+            _commands.Add(Tuple.Create("/shutdown",true), ShutDown);
+            _commands.Add(Tuple.Create("/worktime", true), WorkTime);
+            _commands.Add(Tuple.Create("/usage", true), UsageComputer);
+        }
+
+        /// <summary>
+        /// Выполнение команды
+        /// </summary>
+        /// <param name="command">Запрос команды</param>
+        public async Task ExecuteCommand(string command, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        {
+            foreach (var item in _commands)
+            {
+                if(item.Key.Item1.ToLower() == command.ToLower())
+                {
+                    //Требуется проверить права доступа к команде
+                    if(item.Key.Item2)
+                    {
+                        //Получение данных о правах пользователя
+                        bool HasPrivilage = Common.HasAccess(update.Message.Chat.Id);
+                        //Нет прав доступа
+                        if(!HasPrivilage)
+                        {
+                            await PrivilagesMissing(botClient, update, cancellationToken);
+                            return;
+                        }
+                    }
+                    //Выполнение команды
+                    await item.Value(botClient, update, cancellationToken);
+                    return;
+                }
+            }
+            //Сообщение что команда не найдена
+            await CommandMissing(botClient, update, cancellationToken);
         }
         /// <summary>
         /// Команда для выключения компьютера
@@ -27,8 +75,9 @@ namespace _WF_TelegramPCManager
                 text: $"Выключаю компьютер!",
                 cancellationToken: cancellationToken);
 
-            Process.Start(@"C:\Windows\System32\shutdown.exe", "/s /f /t 10");
+            Computer.ShutDown();
         }
+
         /// <summary>
         /// Команда для получения идентификатора пользователя из telegram
         /// </summary>
@@ -43,20 +92,26 @@ namespace _WF_TelegramPCManager
         /// <summary>
         /// Команда для получения времени работы компьютера
         /// </summary>
-        public async Task Status(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        public async Task WorkTime(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            Console.WriteLine("Команда Status");
+            string workTime = Computer.GetWorkTime();
 
-            String strResult = "Время работы компьютера ";
-            strResult += Convert.ToString(Environment.TickCount / 86400000) + " дней, ";
-            strResult += Convert.ToString(Environment.TickCount / 3600000 % 24) + " часов, ";
-            strResult += Convert.ToString(Environment.TickCount / 120000 % 60) + " минут, ";
-            strResult += Convert.ToString(Environment.TickCount / 1000 % 60) + " секунд.";
-
-            
             Message sentMessage = await botClient.SendTextMessageAsync(
                 chatId: update.Message.Chat.Id,
-                text: strResult,
+                text: workTime,
+                cancellationToken: cancellationToken);
+        }
+        /// <summary>
+        /// Нагрузка компьютера
+        /// </summary>
+        public async Task UsageComputer(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        {
+            var memory = Computer.GetMemoryUsage();
+            var cpu = await Computer.GetCPULoad();
+
+            Message sentMessage = await botClient.SendTextMessageAsync(
+                chatId: update.Message.Chat.Id,
+                text: cpu + memory,
                 cancellationToken: cancellationToken);
         }
 

@@ -5,6 +5,7 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <RootNamespace>_WF_TelegramPCManager</RootNamespace>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>8726504_telegram_icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
