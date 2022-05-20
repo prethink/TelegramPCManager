@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace _WF_TelegramPCManager
 {
@@ -28,11 +29,12 @@ namespace _WF_TelegramPCManager
         public void RegisterCommands()
         {
             /*Формат регистрации Вызов команды, требуется права доступа, команда*/
+            _commands.Add(Tuple.Create("UserId", false), GetMyUserId);
+            _commands.Add(Tuple.Create("/menu", true), MainMenu);
+            _commands.Add(Tuple.Create("Выключить ПК", true), ShutDown);
+            _commands.Add(Tuple.Create("Время работы ПК", true), WorkTime);
+            _commands.Add(Tuple.Create("Нагрузка ПК", true), UsageComputer);
 
-            _commands.Add(Tuple.Create("/userid", false), GetMyUserId);
-            _commands.Add(Tuple.Create("/shutdown",true), ShutDown);
-            _commands.Add(Tuple.Create("/worktime", true), WorkTime);
-            _commands.Add(Tuple.Create("/usage", true), UsageComputer);
         }
 
         /// <summary>
@@ -134,6 +136,26 @@ namespace _WF_TelegramPCManager
             Message sentMessage = await botClient.SendTextMessageAsync(
                 chatId: update.Message.Chat.Id,
                 text: $"У вас не достаточно прав, для этого бота!",
+                cancellationToken: cancellationToken);
+        }
+
+        public async Task MainMenu(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        {
+            ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
+                {
+                new KeyboardButton[] { "UserId" },
+                new KeyboardButton[] { "Выключить ПК" },
+                new KeyboardButton[] { "Время работы ПК" },
+                new KeyboardButton[] { "Нагрузка ПК" },
+            })
+            {
+                ResizeKeyboard = true
+            };
+
+            Message sentMessage = await botClient.SendTextMessageAsync(
+                chatId: update.Message.Chat.Id,
+                text: "Главное меню",
+                replyMarkup: replyKeyboardMarkup,
                 cancellationToken: cancellationToken);
         }
     }
