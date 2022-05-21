@@ -13,6 +13,15 @@ namespace _WF_TelegramPCManager
 {
     public class Commands
     {
+        #region кнопки
+        const string USER_ID = "👤 UserId";
+        const string TIME_WORK = "⌛ Время работы ПК";
+        const string USAGE_PC = "🌡 Нагрузка ПК";
+        const string SHUTDOWN = "🟠 Выключить ПК";
+        #endregion
+
+
+
         delegate Task Command(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken);
         Dictionary<Tuple<string,bool>, Command> _commands; 
         private Telegram telegram;
@@ -29,11 +38,11 @@ namespace _WF_TelegramPCManager
         public void RegisterCommands()
         {
             /*Формат регистрации Вызов команды, требуется права доступа, команда*/
-            _commands.Add(Tuple.Create("UserId", false), GetMyUserId);
+            _commands.Add(Tuple.Create(USER_ID, false), GetMyUserId);
             _commands.Add(Tuple.Create("/menu", true), MainMenu);
-            _commands.Add(Tuple.Create("Выключить ПК", true), ShutDown);
-            _commands.Add(Tuple.Create("Время работы ПК", true), WorkTime);
-            _commands.Add(Tuple.Create("Нагрузка ПК", true), UsageComputer);
+            _commands.Add(Tuple.Create(SHUTDOWN, true), ShutDown);
+            _commands.Add(Tuple.Create(TIME_WORK, true), WorkTime);
+            _commands.Add(Tuple.Create(USAGE_PC, true), UsageComputer);
 
         }
 
@@ -143,10 +152,10 @@ namespace _WF_TelegramPCManager
         {
             ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
                 {
-                new KeyboardButton[] { "UserId" },
-                new KeyboardButton[] { "Выключить ПК" },
-                new KeyboardButton[] { "Время работы ПК" },
-                new KeyboardButton[] { "Нагрузка ПК" },
+                new KeyboardButton[] { USER_ID },
+                new KeyboardButton[] { SHUTDOWN },
+                new KeyboardButton[] { TIME_WORK },
+                new KeyboardButton[] { USAGE_PC },
             })
             {
                 ResizeKeyboard = true
