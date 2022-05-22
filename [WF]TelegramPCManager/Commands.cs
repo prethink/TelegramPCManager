@@ -14,10 +14,11 @@ namespace _WF_TelegramPCManager
     public class Commands
     {
         #region кнопки
-        const string USER_ID = "👤 UserId";
-        const string TIME_WORK = "⌛ Время работы ПК";
-        const string USAGE_PC = "🌡 Нагрузка ПК";
-        const string SHUTDOWN = "🟠 Выключить ПК";
+        const string USER_ID            = "👤 UserId";
+        const string TIME_WORK          = "⌛ Время работы ПК";
+        const string USAGE_PC           =  "🌡 Нагрузка ПК";
+        const string SHUTDOWN           = "🟠 Выключить ПК";
+        const string MAIN_MEHU          = "🗺 Главное меню";
         #endregion
 
 
@@ -39,7 +40,9 @@ namespace _WF_TelegramPCManager
         {
             /*Формат регистрации Вызов команды, требуется права доступа, команда*/
             _commands.Add(Tuple.Create(USER_ID, false), GetMyUserId);
-            _commands.Add(Tuple.Create("/menu", true), MainMenu);
+            _commands.Add(Tuple.Create("/menu", false), MainMenu);
+            _commands.Add(Tuple.Create("/start", false), MainMenu);
+            _commands.Add(Tuple.Create(MAIN_MEHU, false), MainMenu);
             _commands.Add(Tuple.Create(SHUTDOWN, true), ShutDown);
             _commands.Add(Tuple.Create(TIME_WORK, true), WorkTime);
             _commands.Add(Tuple.Create(USAGE_PC, true), UsageComputer);
@@ -148,24 +151,73 @@ namespace _WF_TelegramPCManager
                 cancellationToken: cancellationToken);
         }
 
+        /// <summary>
+        /// Отображение главного меню
+        /// </summary>
         public async Task MainMenu(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
+            List<string> menu = new();
+            menu.Add(USER_ID);
+            menu.Add(SHUTDOWN);
+            menu.Add(TIME_WORK);
+            menu.Add(USAGE_PC);
+
+            var generatedMenu = GenerateMenu(1, menu, MAIN_MEHU); 
+        
+            Message sentMessage = await botClient.SendTextMessageAsync(
+                chatId: update.Message.Chat.Id,
+                text: "Главное меню",
+                replyMarkup: generatedMenu,
+                cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Генерирует меню для бота
+        /// </summary>
+        /// <param name="maxColumn">Максимальное количество столбцов</param>
+        /// <param name="menu">Коллекция меню</param>
+        /// <param name="mainMenu">Есть не пусто, добавляет главное меню</param>
+        /// <returns></returns>
+        public ReplyKeyboardMarkup GenerateMenu(int maxColumn, List<string> menu,string mainMenu)
+        {
+            List < List < KeyboardButton >> buttons = new();
+
+            int row = 0;
+            int currentElement = 0;
+
+            foreach (var item in menu)
+            {
+                if(currentElement == 0)
                 {
-                new KeyboardButton[] { USER_ID },
-                new KeyboardButton[] { SHUTDOWN },
-                new KeyboardButton[] { TIME_WORK },
-                new KeyboardButton[] { USAGE_PC },
-            })
+                    buttons.Add(new List<KeyboardButton>());
+                    buttons[row].Add(new KeyboardButton(item));
+                }
+                else
+                {
+                    buttons[row].Add(new KeyboardButton(item));
+                }
+
+                currentElement++;
+
+                if(currentElement >= maxColumn)
+                {
+                    currentElement = 0;
+                    row++;
+                }
+            }
+
+            if(!string.IsNullOrWhiteSpace(mainMenu))
+            {
+                buttons.Add(new List<KeyboardButton>());
+                buttons[row].Add(mainMenu);
+            }
+
+            ReplyKeyboardMarkup replyKeyboardMarkup = new(buttons)
             {
                 ResizeKeyboard = true
             };
 
-            Message sentMessage = await botClient.SendTextMessageAsync(
-                chatId: update.Message.Chat.Id,
-                text: "Главное меню",
-                replyMarkup: replyKeyboardMarkup,
-                cancellationToken: cancellationToken);
+            return replyKeyboardMarkup;
         }
     }
 }
