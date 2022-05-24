@@ -208,6 +208,10 @@ namespace _WF_TelegramPCManager
 
             if(!string.IsNullOrWhiteSpace(mainMenu))
             {
+                if(currentElement != 0)
+                {
+                    row++;
+                }
                 buttons.Add(new List<KeyboardButton>());
                 buttons[row].Add(mainMenu);
             }
