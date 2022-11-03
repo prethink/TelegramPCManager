@@ -50,7 +50,7 @@ namespace _WF_TelegramPCManager
         /// <param name="memory"></param>
         private static string GetGBOfMemory(ulong memory)
         {
-            return memory / (1024 * 1024 * 1024) + " Гб";
+            return memory / (1024 * 1024 * 1000) + " Гб";
         }
         /// <summary>
         /// Загрузка процессора
